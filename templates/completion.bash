@@ -21,48 +21,48 @@ _rainbow()
   local offset=0 i
   for (( i=1; i <= COMP_CWORD; i++ )); do
     case ${COMP_WORDS[$i]} in
-      --version|-h|--help|--disable-stderr-filtering|--verbose|-f|--config|-{{ filters|selectattr('short_option')|join('|-', attribute='short_option') }}|--{{ filters|join('|--', attribute='long_option') }})
+      (--version|-h|--help|--disable-stderr-filtering|--verbose|-f|--config|-{{ filters|selectattr('short_option')|join('|-', attribute='short_option') }}|--{{ filters|join('|--', attribute='long_option') }})
         i=$((i+1))
         continue
         ;;
-      -*)
+      (-*)
         continue
         ;;
     esac
     offset=$i
     break
   done
-  if [[ $offset -gt 0 ]]; then
+  case $offset in ([1-9]*)
     _command_offset $offset
-  else
+  ;;(*)
   cur=${COMP_WORDS[COMP_CWORD]}
-    if [ $COMP_CWORD -eq 1 ]; then
+    case $COMP_CWORD in (1)
     COMPREPLY=( $( compgen -W "--version -h --help --print-path --print-config-names --disable-stderr-filtering --verbose -f --config -{{ filters|selectattr('short_option')|join(' -', attribute='short_option') }} --{{ filters|join(' --', attribute='long_option') }}" -- $cur ) )
-    else
+    ;;(*)
       first=${COMP_WORDS[1]}
       case "$first" in
-        --version|-h|--help|--print-path|--print-config-names)
+        (--version|-h|--help|--print-path|--print-config-names)
           COMPREPLY=()
           ;;
-        *)
+        (*)
           prev=${COMP_WORDS[COMP_CWORD-1]}
           case "$prev" in
-            -{{ filters|selectattr('short_option')|join('|-', attribute='short_option') }}|--{{ filters|join('|--', attribute='long_option') }})
+            (-{{ filters|selectattr('short_option')|join('|-', attribute='short_option') }}|--{{ filters|join('|--', attribute='long_option') }})
               COMPREPLY=()
               ;;
-            -f|--config)
+            (-f|--config)
               COMPREPLY=( $(rainbow --print-config-names) \
                           $(compgen -d $cur ) \
                           $(compgen -f -X "!*.cfg" $cur ) )
               ;;
-            *)
+            (*)
               COMPREPLY=( $( compgen -W "--disable-stderr-filtering --verbose -f --config -{{ filters|selectattr('short_option')|join(' -', attribute='short_option') }} --{{ filters|join(' --', attribute='long_option') }}" -- $cur ) )
               ;;
           esac
           ;;
       esac
-    fi
-  fi
+    ;;esac
+  ;;esac
 }
 
 complete -F _rainbow rainbow
